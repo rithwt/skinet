@@ -28,8 +28,8 @@ namespace API.Controllers
         [HttpGet]
         public async Task<ActionResult<List<Product>>> GetProducts()
         {
-            var sped= new ProductsWithTypesAndBrandsSpecification();
-            var products = await _productsRepo.ListAsync(sped);
+            var spec= new ProductsWithTypesAndBrandsSpecification();
+            var products = await _productsRepo.ListAsync(spec);
             return Ok(products);
         }
 
