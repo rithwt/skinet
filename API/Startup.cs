@@ -16,6 +16,8 @@ using Infrastructure.Data;
 using Core.Interfaces;
 using AutoMapper;
 using API.Helpers;
+using API.Middleware;
+using API.Errors;
 
 namespace API
 {
@@ -43,17 +45,36 @@ namespace API
             services.AddDbContext<StoreContext>(x=>x.UseSqlite(_config.GetConnectionString("DefaultConnection")));
             services.AddScoped<IProductRepository,ProductRepository>();
             services.AddScoped(typeof(IGenericRepository<>),(typeof(GenericRepository<>)));
+
+            services.Configure<ApiBehaviorOptions>(options=>
+            {
+                options.InvalidModelStateResponseFactory = actionContext=>
+                {
+                    var errors=actionContext.ModelState
+                        .Where(e=>e.Value.Errors.Count>0)
+                        .SelectMany(x=>x.Value.Errors)
+                        .Select(x=>x.ErrorMessage).ToArray();
+                    
+                    var errorResponse=new ApiValidationErrorResponse
+                    {
+                        Errors=errors
+                    };
+                    return new BadRequestObjectResult(errorResponse);
+                };
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            app.UseMiddleware<ExceptionMiddleware>();
             if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
+            {                
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "WebAPIv5 v1"));
             }
+
+            app.UseStatusCodePagesWithReExecute("/errors/{0}");
 
             app.UseHttpsRedirection();
 
