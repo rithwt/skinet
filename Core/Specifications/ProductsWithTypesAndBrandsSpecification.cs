@@ -11,6 +11,7 @@ namespace Core.Specifications
     {
         public ProductsWithTypesAndBrandsSpecification(ProductSpecParams productParams)
             : base(x=>
+            (string.IsNullOrEmpty(productParams.Search)||x.Name.ToLower().Contains(productParams.Search))&&
             (!productParams.brandId.HasValue || x.ProductBrandId == productParams.brandId) &&
             (!productParams.typeId.HasValue || x.ProductTypeId==productParams.typeId)
             )
@@ -33,7 +34,6 @@ namespace Core.Specifications
                     default:
                          AddOrderBy(n => n.Name);
                          break;
-
                 }
 
             }
